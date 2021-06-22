@@ -9,15 +9,17 @@ start = time.time()
 if len(sys.argv) != 3:
     print("Please specify valid arguments. Call the program like this \npython face_clustering.py -specify input folder- -specify output path-")
     exit()
-# Download the pre trained models, unzip them and save them in the save folder as this file
+
+
+# These models have already been downloaded and are present in the parent directory
 predictor_path = 'shape_predictor_5_face_landmarks.dat' # Download from http://dlib.net/files/dlib_face_recognition_resnet_model_v1.dat.bz2
-face_rec_model_path = 'dlib_face_recognition_resnet_model_v1.dat' # Download from http://dlib.net/files/shape_predictor_5_face_landmarks.dat.bz2
+face_rec_model_path = 'dlib_face_recognition_resnet_model_v1.dat' # Download from http://dlipyb.net/files/shape_predictor_5_face_landmarks.dat.bz2
 faces_folder_path = sys.argv[1]
 output_folder = sys.argv[2]
 
 detector = dlib.get_frontal_face_detector() #a detector to find the faces
-sp = dlib.shape_predictor(predictor_path) #shape predictor to find face landmarks
-facerec = dlib.face_recognition_model_v1(face_rec_model_path) #face recognition model
+sp = dlib.shape_predictor(predictor_path) #shape predictor to find face landmarks(5 landmarks for each face)
+facerec = dlib.face_recognition_model_v1(face_rec_model_path) #face recognition model(resnet based model returns 128d embedding for each face)
 
 descriptors = []
 images = []
@@ -29,7 +31,7 @@ for f in glob.glob(os.path.join(faces_folder_path, "*.jpg")):
 
     # Ask the detector to find the bounding boxes of each face. The 1 in the second argument indicates that we should upsample the image 1 time. This will make everything bigger and allow us to detect more faces.
     dets = detector(img, 1)
-    print("Number of faces detected: {}".format(len(dets)))
+    print("Number of faces detected in this image: {}".format(len(dets)))
 
     # Now process each face we found.
     for k, d in enumerate(dets):
@@ -41,7 +43,8 @@ for f in glob.glob(os.path.join(faces_folder_path, "*.jpg")):
         descriptors.append(face_descriptor)
         images.append((img, shape))
 
-# Cluster the faces.  
+# Cluster the faces. 
+
 labels = dlib.chinese_whispers_clustering(descriptors, 0.5)
 num_classes = len(set(labels)) # Total number of clusters
 print("Number of clusters: {}".format(num_classes))
@@ -65,7 +68,6 @@ for i in range(0, num_classes):
         file_path = os.path.join(output_folder_path,"face_"+str(k)+"_"+str(i))
         dlib.save_face_chip(img, shape, file_path, size=150, padding=0.25)
         
-print("--- %s seconds ---" % (time.time() - start))
     
     
 
